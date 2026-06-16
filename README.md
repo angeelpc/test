@@ -1,3 +1,5 @@
+<img width="1800" height="1800" alt="wordart-image-2026-06-16 (12)" src="https://github.com/user-attachments/assets/a14efdf4-803f-41c7-af79-65f9631caec0" />
+<img width="2400" height="1000" alt="wordart-text-2026-06-16 (4)" src="https://github.com/user-attachments/assets/74957838-480a-4fa9-969e-d7d6ec366d9e" />
 <img width="2400" height="1000" alt="wordart-text-2026-06-16 (1)" src="https://github.com/user-attachments/assets/e04927cd-66c0-48fd-a87d-7b7e656b949c" />
 # Typography Quote Art Generator
 
