@@ -273,30 +273,54 @@ def generate_from_image():
         ]
 
         if mode == 'mosaic':
-            # Mosaico de Color Fotográfico
-            for yy in range(0, HEIGHT, 20):
+            # Mosaico de Color Fotográfico de alta fidelidad (letra por letra)
+            # Reducimos un poco el tamaño de fuente para mejorar la definición del mosaico
+            fonts_mosaic = [
+                safe_load_font("arial.ttf", 12),
+                safe_load_font("arial.ttf", 14),
+                safe_load_font("arialbd.ttf", 12),
+                safe_load_font("arialbd.ttf", 14),
+            ]
+            
+            # Recorrer verticalmente con un paso menor (líneas de texto más compactas)
+            for yy in range(0, HEIGHT, 14):
                 xx = 0
                 while xx < WIDTH:
                     phrase = random.choice(quotes)
-                    font = random.choice(fonts)
+                    font = random.choice(fonts_mosaic)
                     
-                    try:
-                        bbox_p = draw_res.textbbox((0, 0), phrase, font=font)
-                        phrase_w = bbox_p[2] - bbox_p[0]
-                    except AttributeError:
-                        phrase_w, _ = draw_res.textsize(phrase, font=font)
+                    # Dibujar la frase caracter por caracter para un color de pixel exacto
+                    for char in phrase:
+                        if xx >= WIDTH:
+                            break
+                        
+                        # Obtener el ancho del caracter para avanzar horizontalmente
+                        try:
+                            char_w = int(font.getlength(char))
+                        except AttributeError:
+                            # Fallback para Pillow antiguo
+                            try:
+                                bbox_c = draw_res.textbbox((0, 0), char, font=font)
+                                char_w = bbox_c[2] - bbox_c[0]
+                            except AttributeError:
+                                char_w, _ = draw_res.textsize(char, font=font)
+                                
+                        if char_w <= 0:
+                            char_w = 6 # Ancho de seguridad mínimo
+                        
+                        # Tomar el color del píxel exacto debajo de la letra en la imagen de referencia
+                        sample_x = min(max(0, xx), WIDTH - 1)
+                        sample_y = min(max(0, yy), HEIGHT - 1)
+                        pixel_color = source_image.getpixel((sample_x, sample_y))
+                        
+                        # Dibujar el caracter si no es un espacio en blanco
+                        if char != ' ':
+                            draw_res.text((xx, yy), char, fill=pixel_color, font=font)
+                        
+                        xx += char_w
                     
-                    # Coordenada del píxel central para muestrear el color de la foto
-                    sample_x = min(max(0, xx + phrase_w // 2), WIDTH - 1)
-                    sample_y = min(max(0, yy), HEIGHT - 1)
-                    
-                    # Tomar color del píxel de la imagen original
-                    pixel_color = source_image.getpixel((sample_x, sample_y))
-                    
-                    # Dibujar frase con el color de la foto original
-                    draw_res.text((xx, yy), phrase, fill=pixel_color, font=font)
-                    
-                    xx += phrase_w + random.randint(10, 20)
+                    # Espacio de separación entre palabras/frases
+                    xx += random.randint(10, 18)
                     
         else:
             # Modo Silueta de Imagen (Fondo oscuro con texto brillante solo donde la imagen tiene contraste)
