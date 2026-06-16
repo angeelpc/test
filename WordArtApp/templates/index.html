@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordArt Studio - Generador de Siluetas y Mosaicos</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS Personalizado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    <div class="container">
+        <!-- Encabezado de la App -->
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <h1>WordArt <span>Studio</span></h1>
+            </div>
+            <p class="subtitle">Transforma palabras e imágenes en espectaculares siluetas tipográficas de alta resolución.</p>
+        </header>
+
+        <main class="app-layout">
+            <!-- Panel de Controles Izquierdo -->
+            <section class="control-panel glass">
+                <!-- Selector de Modo (Pestañas) -->
+                <div class="tab-container">
+                    <button class="tab-btn active" id="tab-text" onclick="switchTab('text')">
+                        <i class="fa-solid fa-font"></i> Silueta de Texto
+                    </button>
+                    <button class="tab-btn" id="tab-image" onclick="switchTab('image')">
+                        <i class="fa-solid fa-image"></i> Silueta/Mosaico de Imagen
+                    </button>
+                </div>
+
+                <!-- Formulario Principal -->
+                <form id="art-form" onsubmit="generateArt(event)">
+                    <input type="hidden" id="current-tab" name="current_tab" value="text">
+                    <input type="hidden" id="selected-preset" name="preset_id" value="0">
+
+                    <!-- SECCIÓN TEXTO PRINCIPAL (Solo visible en pestaña Texto) -->
+                    <div id="text-section" class="form-group">
+                        <label for="main-text">Palabra Principal</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-heading input-icon"></i>
+                            <input type="text" id="main-text" name="text" value="TB4B" maxlength="15" placeholder="Escribe una palabra...">
+                        </div>
+                        <small class="help-text">Esta palabra será rellenada con tus frases en el centro del diseño.</small>
+                    </div>
+
+                    <!-- SECCIÓN IMAGEN (Solo visible en pestaña Imagen) -->
+                    <div id="image-section" class="form-group hidden">
+                        <label>Carga tu Imagen de Referencia</label>
+                        <div class="upload-zone" id="upload-zone">
+                            <input type="file" id="image-file" name="image" accept="image/*" onchange="handleFileSelect(event)">
+                            <div class="upload-prompt" id="upload-prompt">
+                                <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                                <p>Arrastra tu archivo aquí o <span>haz clic para buscar</span></p>
+                                <span class="upload-spec">PNG, JPG de alta resolución</span>
+                            </div>
+                            <div class="upload-preview hidden" id="upload-preview-container">
+                                <img id="upload-img-preview" src="" alt="Vista previa de carga">
+                                <button type="button" class="remove-upload-btn" onclick="clearUpload(event)">
+                                    <i class="fa-solid fa-xmark"></i> Quitar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Opciones de Modo de Imagen -->
+                        <div class="image-options">
+                            <label>Efecto Visual de Imagen</label>
+                            <div class="radio-group">
+                                <label class="radio-card">
+                                    <input type="radio" name="mode" value="mosaic" checked onchange="toggleImageOptions()">
+                                    <div class="radio-content">
+                                        <i class="fa-solid fa-palette"></i>
+                                        <div class="radio-details">
+                                            <span class="radio-title">Mosaico a Color</span>
+                                            <span class="radio-desc">Usa los colores reales de la foto</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="radio-card">
+                                    <input type="radio" name="mode" value="silhouette" onchange="toggleImageOptions()">
+                                    <div class="radio-content">
+                                        <i class="fa-solid fa-circle-half-stroke"></i>
+                                        <div class="radio-details">
+                                            <span class="radio-title">Silueta de Imagen</span>
+                                            <span class="radio-desc">Contraste usando paleta elegida</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Selector de Umbral (Solo para Silueta) -->
+                        <div id="threshold-container" class="form-group hidden">
+                            <div class="slider-header">
+                                <label for="threshold-slider">Sensibilidad del Contraste</label>
+                                <span class="slider-val" id="threshold-val">128</span>
+                            </div>
+                            <input type="range" id="threshold-slider" name="threshold" min="30" max="220" value="128" oninput="updateSliderVal(this.value)">
+                        </div>
+                    </div>
+
+                    <!-- FRASES DE RELLENO -->
+                    <div class="form-group">
+                        <label for="fill-quotes">Frases/Palabras de Relleno</label>
+                        <div class="textarea-wrapper">
+                            <i class="fa-solid fa-quote-left textarea-icon"></i>
+                            <textarea id="fill-quotes" name="quotes" rows="5" placeholder="Escribe frases separadas por saltos de línea..."></textarea>
+                        </div>
+                        <small class="help-text">Si se deja vacío, se utilizarán frases inspiracionales por defecto.</small>
+                    </div>
+
+                    <!-- PALETAS DE COLOR PREDEFINIDAS -->
+                    <div class="form-group" id="preset-selector-group">
+                        <label>Elige una Paleta de Color (15 Diseños)</label>
+                        <div class="presets-grid">
+                            {% for preset in presets %}
+                            <div class="preset-card {% if loop.first %}active{% endif %}" 
+                                 data-id="{{ loop.index0 }}" 
+                                 onclick="selectPreset({{ loop.index0 }}, this)"
+                                 title="{{ preset.name }}">
+                                <div class="preset-preview" style="background: linear-gradient(135deg, rgb{{ preset.colors[0] }}, rgb{{ preset.colors[1] }}{% if preset.colors|length == 3 %}, rgb{{ preset.colors[2] }}{% endif %});"></div>
+                                <span class="preset-label">{{ preset.name }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- BOTÓN GENERAR -->
+                    <button type="submit" class="generate-btn" id="submit-btn">
+                        <i class="fa-solid fa-rotate-right"></i> Generar Obra de Arte
+                    </button>
+                </form>
+            </section>
+
+            <!-- Panel de Previsualización Derecho -->
+            <section class="preview-panel glass">
+                <div class="preview-header">
+                    <h2>Previsualización de Salida</h2>
+                    <span class="badge" id="output-badge">Texto</span>
+                </div>
+
+                <div class="canvas-container" id="canvas-container">
+                    <div class="empty-state" id="empty-state">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <p>Haz clic en "Generar Obra de Arte" para ver tu diseño tipográfico premium aquí.</p>
+                    </div>
+                    <div class="loader-container hidden" id="loader">
+                        <div class="spinner"></div>
+                        <p>Generando composición tipográfica de alta resolución...</p>
+                    </div>
+                    <img id="output-image" class="hidden" alt="Resultado del diseño tipográfico">
+                </div>
+
+                <div class="action-buttons hidden" id="actions-container">
+                    <button class="action-btn download" onclick="downloadImage()">
+                        <i class="fa-solid fa-download"></i> Descargar Imagen PNG
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+    <!-- Script de Comportamiento -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
