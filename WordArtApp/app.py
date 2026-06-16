@@ -6,6 +6,10 @@ import os
 
 app = Flask(__name__)
 
+# Rutas absolutas a las fuentes empaquetadas en la aplicación
+FONT_REGULAR_PATH = os.path.join(app.root_path, 'static', 'fonts', 'Vera.ttf')
+FONT_BOLD_PATH = os.path.join(app.root_path, 'static', 'fonts', 'VeraBd.ttf')
+
 # Paletas de colores predefinidas (15 presets)
 PRESETS = [
     # 0: Sunset Glow
@@ -75,7 +79,21 @@ def get_preset_color(preset_id, x, width):
     return (r, g, b)
 
 def safe_load_font(font_name, size):
-    """Carga de forma segura una fuente del sistema o recurre a la fuente por defecto"""
+    """Carga de forma segura la fuente local empaquetada (Vera) o la del sistema si existe"""
+    # Determinar si requerimos negrita o normal
+    if "bd" in font_name.lower() or "bold" in font_name.lower():
+        local_path = FONT_BOLD_PATH
+    else:
+        local_path = FONT_REGULAR_PATH
+
+    # 1. Intentar cargar la fuente local empaquetada
+    try:
+        if os.path.exists(local_path):
+            return ImageFont.truetype(local_path, size)
+    except OSError:
+        pass
+
+    # 2. Intentar cargar la fuente solicitada del sistema
     try:
         return ImageFont.truetype(font_name, size)
     except OSError:
