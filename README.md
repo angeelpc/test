@@ -1,3 +1,4 @@
+<img width="2400" height="1000" alt="wordart-text-2026-06-16 (1)" src="https://github.com/user-attachments/assets/e04927cd-66c0-48fd-a87d-7b7e656b949c" />
 # Typography Quote Art Generator
 
 Python application that generates artistic typography compositions where large text is filled with motivational quotes and custom phrases.
